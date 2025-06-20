@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class Cliente(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nome = models.charField(max_length=100)
+    nome = models.CharField(max_length=100)
 
     def str(self):
         return self.user.username

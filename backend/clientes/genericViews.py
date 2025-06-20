@@ -7,14 +7,19 @@ class ClientView(viewsets.ModelViewSet):
 
     serializer_class = SerializerClientView
 
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
         if self.action == 'create':
             return [permissions.AllowAny()]
         
         return super().get_permissions()
-    
-class ReadOnly(viewsets.ReadOnlyModelViewSet):
-    queryset = Cliente.objects.all().order_by('username')    
 
+
+# class RegisterClient(CreateAPIView):
+#     queryset = Cliente.objects.all()
+#     serializer_class = serializerRegisterUser
+
+# class ListClient(ListAPIView):
+#     queryset=Cliente.objects.all()
+#     serializer_class= serializerListAllClients
