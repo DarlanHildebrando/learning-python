@@ -15,6 +15,3 @@ class ClientView(viewsets.ModelViewSet):
         
         return super().get_permissions()
     
-class ReadOnly(viewsets.ReadOnlyModelViewSet):
-    queryset = Cliente.objects.all().order_by('username')    
-

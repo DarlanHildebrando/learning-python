@@ -1,0 +1,58 @@
+# --- Estágio 1: Builder ---
+# Este estágio serve para instalar as dependências de forma otimizada.
+# Usamos uma imagem base específica e "slim" para reduzir o tamanho.
+FROM python:3.11-slim as builder
+
+# Define variáveis de ambiente para Python.
+# PYTHONUNBUFFERED: Garante que os logs sejam enviados direto para o terminal do contêiner.
+# PYTHONDONTWRITEBYTECODE: Impede o Python de gerar arquivos .pyc.
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+
+# Define o diretório de trabalho dentro do contêiner.
+WORKDIR /app
+
+# Atualiza o pip para a versão mais recente.
+RUN pip install --upgrade pip
+
+# Copia APENAS o arquivo de dependências primeiro.
+# Isso aproveita o cache do Docker: esta camada só será reconstruída se o requirements.txt mudar.
+COPY requierements.txt .
+
+# Instala as dependências.
+# A flag --no-cache-dir reduz o tamanho da imagem final.
+RUN pip install --no-cache-dir -r requierements.txt
+
+
+# --- Estágio 2: Final ---
+# Este estágio constrói a imagem final limpa, copiando apenas o necessário do estágio builder.
+FROM python:3.11-slim
+
+# Cria um grupo e um usuário não-root para executar a aplicação.
+# Rodar como root é uma má prática de segurança.
+RUN addgroup --system app && adduser --system --group app
+
+# Define o diretório de trabalho.
+WORKDIR /app
+
+# Copia as dependências já instaladas do estágio 'builder'.
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copia o código da sua aplicação para o contêiner.
+COPY . .
+
+# Altera o dono dos arquivos para o usuário 'app' que criamos.
+RUN chown -R app:app /app
+
+# Muda para o usuário não-root.
+USER app
+
+# Expõe a porta em que o Gunicorn irá rodar.
+# Isto é uma documentação, não abre a porta de fato.
+EXPOSE 8000
+
+# O comando para iniciar a aplicação.
+# IMPORTANTE: Troque "seu_projeto" pelo nome da pasta principal do seu projeto Django
+# (a que contém o arquivo wsgi.py).
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "seu_projeto.wsgi:application"]

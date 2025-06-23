@@ -14,6 +14,7 @@ class ClientView(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         
         return super().get_permissions()
+    
 
 
 # class RegisterClient(CreateAPIView):

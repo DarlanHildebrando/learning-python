@@ -5,43 +5,29 @@ from .models import Cliente
 class UserDisplaySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['username', 'email']
 
 class SerializerClientView(serializers.ModelSerializer):
-    user = UserDisplaySerializer
-
-    email = serializers.EmailField(write_only=True, required=True)
-    username = serializers.CharField(write_only=True, required=True)
-    password = serializers.CharField(write_only=True, required=True)
-
-    print('AAAAAAAAAAAAAAAA')
+    user = UserDisplaySerializer()
 
     class Meta:
         model = Cliente
         fields = (
           'id',
-          'username',
-          'email',
-          'password'
+          'user',
+          'cpf'
         )
-        read_only_fields = [id]
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         
-        user_data = {
-            'username': validated_data.pop('username'),
-            'email': validated_data.pop('email'),
-            'password': validated_data.pop('password'),
-        }
+        user_data = validated_data.pop('user')
 
         user = User.objects.create_user(**user_data)
         
         cliente = Cliente.objects.create(user=user, **validated_data)
-
+ 
         return cliente
-
-class SerializerReadOnly(serializers.ModelSerializer):
-    
 
 # class serializerRegisterUser(serializers.ModelSerializer):
 #     password = serializers.CharField(write_only=True)
